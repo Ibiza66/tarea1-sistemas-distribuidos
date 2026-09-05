@@ -6,22 +6,61 @@ estructuras de datos simples que puedan ser utilizadas por
 las consultas del scraper.
 """
 
+from datetime import datetime
+
 from bs4 import BeautifulSoup
+
+
+ANIO_TEMPORADA = 2026
+
+
+def normalizar_fecha_hora(texto_fecha_hora):
+    """
+    Convierte una fecha de Soccerway al formato estándar.
+
+    Ejemplo:
+        "05.09. 00:30"
+
+    Se transforma en:
+        fecha = "2026-09-05"
+        hora = "00:30"
+    """
+
+    fecha_hora = datetime.strptime(
+        f"{texto_fecha_hora} {ANIO_TEMPORADA}",
+        "%d.%m. %H:%M %Y"
+    )
+
+    return (
+        fecha_hora.strftime("%Y-%m-%d"),
+        fecha_hora.strftime("%H:%M")
+    )
+
+
+def convertir_goles(elemento):
+    """
+    Convierte el marcador a entero.
+
+    Si el partido todavía no tiene resultado, devuelve None.
+    """
+
+    if elemento is None:
+        return None
+
+    texto = elemento.get_text(strip=True)
+
+    if not texto:
+        return None
+
+    try:
+        return int(texto)
+    except ValueError:
+        return None
 
 
 def extraer_partidos(html):
     """
     Extrae los partidos disponibles desde el HTML renderizado.
-
-    Parameters
-    ----------
-    html : str
-        HTML generado después de ejecutar JavaScript en Soccerway.
-
-    Returns
-    -------
-    list
-        Lista de diccionarios con la información de cada partido.
     """
 
     soup = BeautifulSoup(html, "html.parser")
@@ -31,7 +70,7 @@ def extraer_partidos(html):
     partidos = []
 
     for elemento in elementos_partido:
-        fecha_hora = elemento.select_one(
+        fecha_hora_elemento = elemento.select_one(
             '[data-testid="wcl-stageTime"]'
         )
 
@@ -51,20 +90,28 @@ def extraer_partidos(html):
             '.event__score[data-side="away"]'
         )
 
-        # Ignoramos bloques incompletos que no contienen
-        # los datos mínimos necesarios de un partido.
         if not (
-            fecha_hora
+            fecha_hora_elemento
             and equipo_local
             and equipo_visitante
         ):
             continue
 
+        texto_fecha_hora = fecha_hora_elemento.get_text(
+            " ",
+            strip=True
+        )
+
+        try:
+            fecha, hora = normalizar_fecha_hora(
+                texto_fecha_hora
+            )
+        except ValueError:
+            continue
+
         partido = {
-            "fecha_hora": fecha_hora.get_text(
-                " ",
-                strip=True
-            ),
+            "fecha": fecha,
+            "hora": hora,
             "equipo_local": equipo_local.get_text(
                 " ",
                 strip=True
@@ -73,15 +120,11 @@ def extraer_partidos(html):
                 " ",
                 strip=True
             ),
-            "goles_local": (
-                goles_local.get_text(strip=True)
-                if goles_local
-                else None
+            "goles_local": convertir_goles(
+                goles_local
             ),
-            "goles_visitante": (
-                goles_visitante.get_text(strip=True)
-                if goles_visitante
-                else None
+            "goles_visitante": convertir_goles(
+                goles_visitante
             )
         }
 
