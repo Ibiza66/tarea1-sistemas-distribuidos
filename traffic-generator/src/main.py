@@ -9,6 +9,7 @@ ejecutar distintos experimentos sin modificar el código fuente.
 """
 
 import random
+import time
 from collections import Counter
 
 from config import obtener_configuracion
@@ -24,7 +25,7 @@ def ejecutar_generador(configuracion):
     ----------
     configuracion : dict
         Parámetros del experimento, incluyendo distribución,
-        cantidad de solicitudes, semilla y parámetro Zipf.
+        cantidad de solicitudes, semilla, parámetro Zipf y tasa de arribo.
     """
 
     generador_aleatorio = random.Random(
@@ -53,7 +54,21 @@ def ejecutar_generador(configuracion):
         f"{configuracion['tasa_arribo']} solicitudes/segundo"
     )
 
+    # El intervalo entre solicitudes se obtiene a partir de la
+    # tasa de arribo. Por ejemplo, 5 solicitudes/segundo
+    # corresponden a un intervalo de 0.2 segundos.
+    intervalo_solicitudes = 1 / configuracion["tasa_arribo"]
+
+    print(
+        f"Intervalo entre solicitudes: "
+        f"{intervalo_solicitudes:.3f} segundos"
+    )
+
     print("\nPrimeras solicitudes:")
+
+    # Se registra el instante inicial para medir la duración
+    # total de la generación de tráfico.
+    tiempo_inicio = time.monotonic()
 
     for numero in range(
         1,
@@ -85,6 +100,34 @@ def ejecutar_generador(configuracion):
                 f"Solicitud {numero}: {consulta}"
             )
 
+        # Se espera antes de generar la siguiente solicitud para
+        # respetar aproximadamente la tasa de arribo configurada.
+        # Después de la última solicitud no es necesario esperar.
+        if numero < configuracion["cantidad_solicitudes"]:
+            time.sleep(intervalo_solicitudes)
+
+       # Se calcula cuánto demoró el proceso completo.
+    tiempo_total = time.monotonic() - tiempo_inicio
+
+    # La tasa observada se calcula utilizando la cantidad de
+    # intervalos entre solicitudes. Para N solicitudes existen
+    # N - 1 intervalos de llegada.
+    if configuracion["cantidad_solicitudes"] > 1:
+        tasa_observada = (
+            (configuracion["cantidad_solicitudes"] - 1)
+            / tiempo_total
+        )
+    else:
+        tasa_observada = 0
+
+    print(
+        f"\nTiempo total: {tiempo_total:.2f} segundos"
+    )
+
+    print(
+        f"Tasa observada: "
+        f"{tasa_observada:.2f} solicitudes/segundo"
+    )
     print("\nResumen:")
 
     for tipo in ["Q1", "Q2", "Q3", "Q4", "Q5"]:
