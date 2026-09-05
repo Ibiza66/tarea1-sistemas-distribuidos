@@ -7,6 +7,7 @@ las consultas del scraper.
 """
 
 from datetime import datetime
+import re
 
 from bs4 import BeautifulSoup
 
@@ -60,17 +61,34 @@ def convertir_goles(elemento):
 
 def normalizar_nombre_equipo(nombre):
     """
-    Unifica variantes de nombres entregadas por Soccerway.
+    Corrige variaciones de espaciado en nombres entregados
+    por Soccerway.
     """
 
-    equivalencias = {
-        "U. DeChile": "U. De Chile",
-        "U. DeConcepción": "U. De Concepción",
-        "U. LaCalera": "U. La Calera",
-    }
+    nombre = nombre.strip()
 
-    return equivalencias.get(nombre, nombre)
+    # Asegura un espacio después de "U."
+    nombre = re.sub(
+        r"^U\.\s*",
+        "U. ",
+        nombre
+    )
 
+    # Corrige casos como "DeChile" o "DeConcepción".
+    nombre = re.sub(
+        r"\bDe(?=[A-ZÁÉÍÓÚÑ])",
+        "De ",
+        nombre
+    )
+
+    # Corrige casos como "LaCalera".
+    nombre = re.sub(
+        r"\bLa(?=[A-ZÁÉÍÓÚÑ])",
+        "La ",
+        nombre
+    )
+
+    return nombre
 
 def extraer_nombre_equipo(elemento):
     """
@@ -95,8 +113,6 @@ def extraer_nombre_equipo(elemento):
             strip=True
         )
     )
-
-
 def extraer_partidos(html):
     """
     Extrae los partidos disponibles desde el HTML renderizado.
