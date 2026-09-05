@@ -243,3 +243,82 @@ def obtener_partidos_periodo(
     )
 
     return encontrados
+def obtener_proximos_partidos(
+    partidos,
+    equipo,
+    cantidad=5
+):
+    """
+    Obtiene los próximos partidos programados de un equipo.
+
+    Parameters
+    ----------
+    partidos : list
+        Partidos procesados desde Soccerway.
+
+    equipo : str
+        Nombre del equipo solicitado.
+
+    cantidad : int
+        Número máximo de próximos partidos a devolver.
+
+    Returns
+    -------
+    list
+        Próximos partidos del equipo, ordenados por fecha y hora.
+    """
+
+    equipo_resuelto = resolver_nombre_equipo(equipo)
+
+    equipo_normalizado = normalizar_texto(
+        equipo_resuelto
+    )
+
+    proximos = []
+
+    for partido in partidos:
+        local = normalizar_texto(
+            partido["equipo_local"]
+        )
+
+        visitante = normalizar_texto(
+            partido["equipo_visitante"]
+        )
+
+        pertenece_equipo = (
+            local == equipo_normalizado
+            or visitante == equipo_normalizado
+        )
+
+        partido_programado = (
+            partido["goles_local"] is None
+            and partido["goles_visitante"] is None
+        )
+
+        if pertenece_equipo and partido_programado:
+            if local == equipo_normalizado:
+                condicion = "local"
+                rival = partido["equipo_visitante"]
+            else:
+                condicion = "visitante"
+                rival = partido["equipo_local"]
+
+            proximos.append(
+                {
+                    "fecha": partido["fecha"],
+                    "hora": partido["hora"],
+                    "equipo_local": partido["equipo_local"],
+                    "equipo_visitante": partido["equipo_visitante"],
+                    "condicion": condicion,
+                    "rival": rival
+                }
+            )
+
+    proximos.sort(
+        key=lambda partido: (
+            partido["fecha"],
+            partido["hora"]
+        )
+    )
+
+    return proximos[:cantidad]
