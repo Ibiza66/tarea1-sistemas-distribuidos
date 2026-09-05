@@ -57,7 +57,25 @@ def convertir_goles(elemento):
     except ValueError:
         return None
 
+def extraer_nombre_equipo(elemento):
+    """
+    Obtiene el nombre del equipo.
 
+    Se prioriza el atributo alt del escudo porque Soccerway
+    mantiene ahí el nombre completo del participante.
+    """
+
+    imagen = elemento.select_one(
+        '[data-testid="wcl-participantLogo"]'
+    )
+
+    if imagen and imagen.get("alt"):
+        return imagen["alt"].strip()
+
+    return elemento.get_text(
+        " ",
+        strip=True
+    )
 def extraer_partidos(html):
     """
     Extrae los partidos disponibles desde el HTML renderizado.
@@ -112,14 +130,12 @@ def extraer_partidos(html):
         partido = {
             "fecha": fecha,
             "hora": hora,
-            "equipo_local": equipo_local.get_text(
-                " ",
-                strip=True
-            ),
-            "equipo_visitante": equipo_visitante.get_text(
-                " ",
-                strip=True
-            ),
+            "equipo_local": extraer_nombre_equipo(
+    equipo_local
+),
+"equipo_visitante": extraer_nombre_equipo(
+    equipo_visitante
+),
             "goles_local": convertir_goles(
                 goles_local
             ),
