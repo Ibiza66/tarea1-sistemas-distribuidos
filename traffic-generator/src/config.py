@@ -38,6 +38,14 @@ def obtener_configuracion():
     tasa_arribo = float(
         os.getenv("TRAFICO_TASA_ARRIBO", "10")
     )
+    cache_url = os.getenv(
+        "CACHE_SERVICE_URL",
+        "http://cache-service:8000"
+    )
+
+    cache_timeout = float(
+        os.getenv("CACHE_TIMEOUT", "5")
+    )
 
     if distribucion not in ["uniforme", "zipf"]:
         raise ValueError(
@@ -58,6 +66,10 @@ def obtener_configuracion():
         raise ValueError(
             "TRAFICO_TASA_ARRIBO debe ser mayor que cero."
         )
+    if cache_timeout <= 0:
+        raise ValueError(
+            "CACHE_TIMEOUT debe ser mayor que cero."
+        )
 
     return {
         "distribucion": distribucion,
@@ -65,4 +77,6 @@ def obtener_configuracion():
         "semilla": semilla,
         "parametro_zipf": parametro_zipf,
         "tasa_arribo": tasa_arribo,
+        "cache_url": cache_url,
+        "cache_timeout": cache_timeout,
     }

@@ -15,6 +15,8 @@ services:
       TRAFICO_SEMILLA: ${TRAFICO_SEMILLA:-42}
       TRAFICO_ZIPF_S: ${TRAFICO_ZIPF_S:-1.2}
       TRAFICO_TASA_ARRIBO: ${TRAFICO_TASA_ARRIBO:-10}
+      CACHE_SERVICE_URL: ${CACHE_SERVICE_URL:-http://cache-service:8000}
+      CACHE_TIMEOUT: ${CACHE_TIMEOUT:-5}
 
   cache-service:
     build: ./cache-service
