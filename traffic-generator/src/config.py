@@ -38,6 +38,16 @@ def obtener_configuracion():
     tasa_arribo = float(
         os.getenv("TRAFICO_TASA_ARRIBO", "10")
     )
+
+    tipos_consulta = [
+        tipo.strip().upper()
+        for tipo in os.getenv(
+            "TRAFICO_TIPOS_CONSULTA",
+            "Q1,Q2,Q3,Q4,Q5"
+        ).split(",")
+        if tipo.strip()
+    ]
+
     cache_url = os.getenv(
         "CACHE_SERVICE_URL",
         "http://cache-service:8000"
@@ -46,6 +56,9 @@ def obtener_configuracion():
     cache_timeout = float(
         os.getenv("CACHE_TIMEOUT", "5")
     )
+
+    # Tipos de consulta permitidos por el sistema.
+    tipos_validos = {"Q1", "Q2", "Q3", "Q4", "Q5"}
 
     if distribucion not in ["uniforme", "zipf"]:
         raise ValueError(
@@ -66,6 +79,18 @@ def obtener_configuracion():
         raise ValueError(
             "TRAFICO_TASA_ARRIBO debe ser mayor que cero."
         )
+
+    if not tipos_consulta:
+        raise ValueError(
+            "Debe existir al menos un tipo de consulta habilitado."
+        )
+
+    if not set(tipos_consulta).issubset(tipos_validos):
+        raise ValueError(
+            "TRAFICO_TIPOS_CONSULTA solo puede contener "
+            "Q1, Q2, Q3, Q4 y Q5."
+        )
+
     if cache_timeout <= 0:
         raise ValueError(
             "CACHE_TIMEOUT debe ser mayor que cero."
@@ -77,6 +102,7 @@ def obtener_configuracion():
         "semilla": semilla,
         "parametro_zipf": parametro_zipf,
         "tasa_arribo": tasa_arribo,
+        "tipos_consulta": tipos_consulta,
         "cache_url": cache_url,
         "cache_timeout": cache_timeout,
     }

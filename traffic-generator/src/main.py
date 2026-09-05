@@ -25,7 +25,8 @@ def ejecutar_generador(configuracion):
     ----------
     configuracion : dict
         Parámetros del experimento, incluyendo distribución,
-        cantidad de solicitudes, semilla, parámetro Zipf y tasa de arribo.
+        cantidad de solicitudes, semilla, parámetro Zipf,
+        tasa de arribo y tipos de consulta habilitados.
     """
 
     generador_aleatorio = random.Random(
@@ -42,6 +43,11 @@ def ejecutar_generador(configuracion):
         f"{configuracion['cantidad_solicitudes']}"
     )
     print(f"Semilla: {configuracion['semilla']}")
+
+    print(
+        f"Tipos de consulta habilitados: "
+        f"{', '.join(configuracion['tipos_consulta'])}"
+    )
 
     if configuracion["distribucion"] == "zipf":
         print(
@@ -77,12 +83,14 @@ def ejecutar_generador(configuracion):
 
         if configuracion["distribucion"] == "uniforme":
             tipo_consulta = seleccionar_uniforme(
-                generador_aleatorio
+                generador_aleatorio,
+                configuracion["tipos_consulta"]
             )
 
         else:
             tipo_consulta = seleccionar_zipf(
                 generador_aleatorio,
+                configuracion["tipos_consulta"],
                 configuracion["parametro_zipf"]
             )
 
@@ -106,12 +114,10 @@ def ejecutar_generador(configuracion):
         if numero < configuracion["cantidad_solicitudes"]:
             time.sleep(intervalo_solicitudes)
 
-       # Se calcula cuánto demoró el proceso completo.
+    # Se calcula cuánto demoró el proceso completo.
     tiempo_total = time.monotonic() - tiempo_inicio
 
-    # La tasa observada se calcula utilizando la cantidad de
-    # intervalos entre solicitudes. Para N solicitudes existen
-    # N - 1 intervalos de llegada.
+    # Para N solicitudes existen N - 1 intervalos de llegada.
     if configuracion["cantidad_solicitudes"] > 1:
         tasa_observada = (
             (configuracion["cantidad_solicitudes"] - 1)
@@ -128,9 +134,11 @@ def ejecutar_generador(configuracion):
         f"Tasa observada: "
         f"{tasa_observada:.2f} solicitudes/segundo"
     )
+
     print("\nResumen:")
 
-    for tipo in ["Q1", "Q2", "Q3", "Q4", "Q5"]:
+    # Solo se muestran las consultas habilitadas para el experimento.
+    for tipo in configuracion["tipos_consulta"]:
 
         cantidad = conteo[tipo]
 
