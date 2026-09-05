@@ -57,6 +57,21 @@ def convertir_goles(elemento):
     except ValueError:
         return None
 
+
+def normalizar_nombre_equipo(nombre):
+    """
+    Unifica variantes de nombres entregadas por Soccerway.
+    """
+
+    equivalencias = {
+        "U. DeChile": "U. De Chile",
+        "U. DeConcepción": "U. De Concepción",
+        "U. LaCalera": "U. La Calera",
+    }
+
+    return equivalencias.get(nombre, nombre)
+
+
 def extraer_nombre_equipo(elemento):
     """
     Obtiene el nombre del equipo.
@@ -70,12 +85,18 @@ def extraer_nombre_equipo(elemento):
     )
 
     if imagen and imagen.get("alt"):
-        return imagen["alt"].strip()
+        return normalizar_nombre_equipo(
+            imagen["alt"].strip()
+        )
 
-    return elemento.get_text(
-        " ",
-        strip=True
+    return normalizar_nombre_equipo(
+        elemento.get_text(
+            " ",
+            strip=True
+        )
     )
+
+
 def extraer_partidos(html):
     """
     Extrae los partidos disponibles desde el HTML renderizado.
@@ -131,11 +152,11 @@ def extraer_partidos(html):
             "fecha": fecha,
             "hora": hora,
             "equipo_local": extraer_nombre_equipo(
-    equipo_local
-),
-"equipo_visitante": extraer_nombre_equipo(
-    equipo_visitante
-),
+                equipo_local
+            ),
+            "equipo_visitante": extraer_nombre_equipo(
+                equipo_visitante
+            ),
             "goles_local": convertir_goles(
                 goles_local
             ),

@@ -122,3 +122,92 @@ def obtener_ultimos_partidos(partidos, equipo, cantidad=5):
     )
 
     return encontrados[:cantidad]
+def obtener_enfrentamientos(
+    partidos,
+    equipo_1,
+    equipo_2
+):
+    """
+    Obtiene los enfrentamientos finalizados entre dos equipos.
+
+    Parameters
+    ----------
+    partidos : list
+        Partidos procesados desde Soccerway.
+
+    equipo_1 : str
+        Nombre del primer equipo.
+
+    equipo_2 : str
+        Nombre del segundo equipo.
+
+    Returns
+    -------
+    list
+        Partidos disputados entre ambos equipos,
+        ordenados desde el más reciente.
+    """
+
+    equipo_1_resuelto = resolver_nombre_equipo(
+        equipo_1
+    )
+
+    equipo_2_resuelto = resolver_nombre_equipo(
+        equipo_2
+    )
+
+    equipo_1_normalizado = normalizar_texto(
+        equipo_1_resuelto
+    )
+
+    equipo_2_normalizado = normalizar_texto(
+        equipo_2_resuelto
+    )
+
+    enfrentamientos = []
+
+    for partido in partidos:
+        local = normalizar_texto(
+            partido["equipo_local"]
+        )
+
+        visitante = normalizar_texto(
+            partido["equipo_visitante"]
+        )
+
+        mismos_equipos = (
+            (
+                local == equipo_1_normalizado
+                and visitante == equipo_2_normalizado
+            )
+            or
+            (
+                local == equipo_2_normalizado
+                and visitante == equipo_1_normalizado
+            )
+        )
+
+        partido_finalizado = (
+            partido["goles_local"] is not None
+            and partido["goles_visitante"] is not None
+        )
+
+        if mismos_equipos and partido_finalizado:
+            enfrentamientos.append(
+                {
+                    "fecha": partido["fecha"],
+                    "equipo_local": partido["equipo_local"],
+                    "equipo_visitante": partido["equipo_visitante"],
+                    "resultado": (
+                        f"{partido['goles_local']}-"
+                        f"{partido['goles_visitante']}"
+                    )
+                }
+            )
+
+    enfrentamientos.sort(
+        key=lambda partido: partido["fecha"],
+        reverse=True
+    )
+
+    return enfrentamientos
