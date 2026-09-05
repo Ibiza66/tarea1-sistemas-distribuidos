@@ -1,0 +1,26 @@
+services:
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+
+  traffic-generator:
+    build: ./traffic-generator
+    container_name: traffic-generator
+
+  cache-service:
+    build: ./cache-service
+    container_name: cache-service
+    depends_on:
+      - redis
+      - scraper-service
+
+  scraper-service:
+    build: ./scraper-service
+    container_name: scraper-service
+
+  metrics-service:
+    build: ./metrics-service
+    container_name: metrics-service
