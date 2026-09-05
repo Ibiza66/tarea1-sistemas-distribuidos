@@ -5,6 +5,7 @@ Este módulo implementa las consultas solicitadas por el sistema
 sin depender directamente del proceso de scraping.
 """
 
+from datetime import date
 import re
 import unicodedata
 
@@ -58,22 +59,6 @@ def resolver_nombre_equipo(equipo):
 def obtener_ultimos_partidos(partidos, equipo, cantidad=5):
     """
     Obtiene los últimos partidos finalizados de un equipo.
-
-    Parameters
-    ----------
-    partidos : list
-        Partidos procesados desde Soccerway.
-
-    equipo : str
-        Nombre del equipo solicitado.
-
-    cantidad : int
-        Número máximo de partidos a devolver.
-
-    Returns
-    -------
-    list
-        Últimos partidos del equipo.
     """
 
     equipo_resuelto = resolver_nombre_equipo(equipo)
@@ -122,6 +107,8 @@ def obtener_ultimos_partidos(partidos, equipo, cantidad=5):
     )
 
     return encontrados[:cantidad]
+
+
 def obtener_enfrentamientos(
     partidos,
     equipo_1,
@@ -129,23 +116,6 @@ def obtener_enfrentamientos(
 ):
     """
     Obtiene los enfrentamientos finalizados entre dos equipos.
-
-    Parameters
-    ----------
-    partidos : list
-        Partidos procesados desde Soccerway.
-
-    equipo_1 : str
-        Nombre del primer equipo.
-
-    equipo_2 : str
-        Nombre del segundo equipo.
-
-    Returns
-    -------
-    list
-        Partidos disputados entre ambos equipos,
-        ordenados desde el más reciente.
     """
 
     equipo_1_resuelto = resolver_nombre_equipo(
@@ -211,3 +181,65 @@ def obtener_enfrentamientos(
     )
 
     return enfrentamientos
+
+
+def obtener_partidos_periodo(
+    partidos,
+    fecha_inicio,
+    fecha_fin
+):
+    """
+    Obtiene partidos dentro de un período de fechas.
+    """
+
+    try:
+        inicio = date.fromisoformat(fecha_inicio)
+        fin = date.fromisoformat(fecha_fin)
+    except ValueError as error:
+        raise ValueError(
+            "Las fechas deben tener formato YYYY-MM-DD."
+        ) from error
+
+    if inicio > fin:
+        raise ValueError(
+            "La fecha de inicio no puede ser posterior "
+            "a la fecha de término."
+        )
+
+    encontrados = []
+
+    for partido in partidos:
+        fecha_partido = date.fromisoformat(
+            partido["fecha"]
+        )
+
+        if inicio <= fecha_partido <= fin:
+            if (
+                partido["goles_local"] is not None
+                and partido["goles_visitante"] is not None
+            ):
+                resultado = (
+                    f"{partido['goles_local']}-"
+                    f"{partido['goles_visitante']}"
+                )
+            else:
+                resultado = None
+
+            encontrados.append(
+                {
+                    "fecha": partido["fecha"],
+                    "hora": partido["hora"],
+                    "equipo_local": partido["equipo_local"],
+                    "equipo_visitante": partido["equipo_visitante"],
+                    "resultado": resultado
+                }
+            )
+
+    encontrados.sort(
+        key=lambda partido: (
+            partido["fecha"],
+            partido["hora"]
+        )
+    )
+
+    return encontrados
