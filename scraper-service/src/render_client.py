@@ -19,6 +19,11 @@ LIGA_URL = (
     "https://cl.soccerway.com/chile/liga-de-primera/"
 )
 
+TABLA_URL = (
+    "https://cl.soccerway.com/chile/liga-de-primera/"
+    "tabla-de-posiciones/"
+)
+
 def obtener_html_resultados(timeout_ms=30000):
     """
     Renderiza la página de resultados y devuelve su HTML completo.
@@ -123,4 +128,51 @@ def obtener_html_liga(timeout_ms=30000):
     except Exception as error:
         raise RuntimeError(
             f"Error al renderizar Soccerway: {error}"
+        ) from error
+
+def obtener_html_tabla(timeout_ms=30000):
+    """
+    Renderiza la tabla de posiciones de la Liga de Primera.
+    """
+
+    tiempo_inicio = time.perf_counter()
+
+    try:
+        with sync_playwright() as playwright:
+            navegador = playwright.chromium.launch(
+                headless=True
+            )
+
+            pagina = navegador.new_page()
+
+            pagina.goto(
+                TABLA_URL,
+                wait_until="domcontentloaded",
+                timeout=timeout_ms
+            )
+
+            pagina.wait_for_selector(
+                "div.ui-table__row",
+                timeout=timeout_ms
+            )
+
+            html = pagina.content()
+
+            navegador.close()
+
+        tiempo_renderizado_ms = (
+            time.perf_counter() - tiempo_inicio
+        ) * 1000
+
+        return {
+            "html": html,
+            "tiempo_renderizado_ms": round(
+                tiempo_renderizado_ms,
+                3
+            )
+        }
+
+    except Exception as error:
+        raise RuntimeError(
+            f"Error al renderizar tabla de Soccerway: {error}"
         ) from error
