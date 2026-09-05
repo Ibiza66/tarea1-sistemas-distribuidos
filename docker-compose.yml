@@ -9,6 +9,12 @@ services:
   traffic-generator:
     build: ./traffic-generator
     container_name: traffic-generator
+    environment:
+      TRAFICO_DISTRIBUCION: ${TRAFICO_DISTRIBUCION:-uniforme}
+      TRAFICO_SOLICITUDES: ${TRAFICO_SOLICITUDES:-1000}
+      TRAFICO_SEMILLA: ${TRAFICO_SEMILLA:-42}
+      TRAFICO_ZIPF_S: ${TRAFICO_ZIPF_S:-1.2}
+      TRAFICO_TASA_ARRIBO: ${TRAFICO_TASA_ARRIBO:-10}
 
   cache-service:
     build: ./cache-service

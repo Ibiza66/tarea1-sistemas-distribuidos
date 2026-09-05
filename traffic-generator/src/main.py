@@ -1,56 +1,74 @@
 """
 Generador de Tráfico - Tarea 1 Sistemas Distribuidos.
 
-Actualmente permite:
-- Construir consultas Q1-Q5.
-- Seleccionar consultas mediante distribución Uniforme.
-- Seleccionar consultas mediante distribución de Zipf.
-- Repetir experimentos utilizando una semilla fija.
+El servicio genera consultas sintéticas para simular usuarios de la
+plataforma distribuida de fútbol chileno.
 
-Posteriormente se incorporarán:
-- Configuración mediante variables de entorno.
-- Tasa de arribo configurable.
-- Envío de solicitudes al servicio de caché.
+La configuración se obtiene mediante variables de entorno para permitir
+ejecutar distintos experimentos sin modificar el código fuente.
 """
 
 import random
 from collections import Counter
 
+from config import obtener_configuracion
 from query_generator import generar_consulta
 from traffic_distribution import seleccionar_uniforme, seleccionar_zipf
 
 
-def probar_distribucion(nombre, cantidad_solicitudes=1000, semilla=42):
+def ejecutar_generador(configuracion):
     """
-    Genera solicitudes de prueba y cuenta cuántas veces aparece
-    cada tipo de consulta.
+    Genera solicitudes utilizando la configuración entregada.
 
-    Esta función permite verificar experimentalmente el comportamiento
-    de las distribuciones Uniforme y Zipf antes de enviar tráfico real
-    al servicio de caché.
+    Parameters
+    ----------
+    configuracion : dict
+        Parámetros del experimento, incluyendo distribución,
+        cantidad de solicitudes, semilla y parámetro Zipf.
     """
 
-    generador_aleatorio = random.Random(semilla)
+    generador_aleatorio = random.Random(
+        configuracion["semilla"]
+    )
+
     conteo = Counter()
 
-    print(f"\nDistribución: {nombre}")
+    print("Generador de tráfico iniciado correctamente.")
+    print("\nConfiguración:")
+    print(f"Distribución: {configuracion['distribucion']}")
+    print(
+        f"Cantidad de solicitudes: "
+        f"{configuracion['cantidad_solicitudes']}"
+    )
+    print(f"Semilla: {configuracion['semilla']}")
 
-    for numero in range(1, cantidad_solicitudes + 1):
+    if configuracion["distribucion"] == "zipf":
+        print(
+            f"Parámetro Zipf s: "
+            f"{configuracion['parametro_zipf']}"
+        )
 
-        if nombre == "uniforme":
+    print(
+        f"Tasa de arribo configurada: "
+        f"{configuracion['tasa_arribo']} solicitudes/segundo"
+    )
+
+    print("\nPrimeras solicitudes:")
+
+    for numero in range(
+        1,
+        configuracion["cantidad_solicitudes"] + 1
+    ):
+
+        if configuracion["distribucion"] == "uniforme":
             tipo_consulta = seleccionar_uniforme(
                 generador_aleatorio
             )
 
-        elif nombre == "zipf":
+        else:
             tipo_consulta = seleccionar_zipf(
                 generador_aleatorio,
-                parametro_s=1.2
-            )
-
-        else:
-            raise ValueError(
-                f"Distribución no válida: {nombre}"
+                configuracion["parametro_zipf"]
             )
 
         consulta = generar_consulta(
@@ -60,8 +78,8 @@ def probar_distribucion(nombre, cantidad_solicitudes=1000, semilla=42):
 
         conteo[consulta["tipo_consulta"]] += 1
 
-        # Solo mostramos las primeras cinco solicitudes para
-        # evitar imprimir cientos de líneas en la terminal.
+        # Solo se muestran las primeras cinco solicitudes para
+        # mantener una salida de terminal fácil de revisar.
         if numero <= 5:
             print(
                 f"Solicitud {numero}: {consulta}"
@@ -74,7 +92,8 @@ def probar_distribucion(nombre, cantidad_solicitudes=1000, semilla=42):
         cantidad = conteo[tipo]
 
         porcentaje = (
-            cantidad / cantidad_solicitudes
+            cantidad /
+            configuracion["cantidad_solicitudes"]
         ) * 100
 
         print(
@@ -84,17 +103,11 @@ def probar_distribucion(nombre, cantidad_solicitudes=1000, semilla=42):
 
 
 def main():
-    """Ejecuta pruebas iniciales de ambas distribuciones."""
+    """Obtiene la configuración e inicia el generador."""
 
-    print("Generador de tráfico iniciado correctamente.")
+    configuracion = obtener_configuracion()
 
-    probar_distribucion(
-        nombre="uniforme"
-    )
-
-    probar_distribucion(
-        nombre="zipf"
-    )
+    ejecutar_generador(configuracion)
 
 
 if __name__ == "__main__":
