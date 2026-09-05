@@ -29,6 +29,8 @@ services:
   scraper-service:
     build: ./scraper-service
     container_name: scraper-service
+    ports:
+      - "8001:8001"
 
   metrics-service:
     build: ./metrics-service
