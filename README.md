@@ -2,63 +2,75 @@
 
 ## All You Can Cache: Plataforma distribuida del fútbol chileno
 
-Proyecto correspondiente a la Tarea 1 del curso Sistemas Distribuidos.
+Proyecto correspondiente a la Tarea 1 del curso **Sistemas Distribuidos**.
 
-El objetivo del proyecto es implementar una plataforma distribuida que permita
-procesar consultas relacionadas con la Liga de Primera de Chile, utilizando un
-sistema de caché para reducir accesos innecesarios a la fuente externa y mejorar
-el tiempo de respuesta.
+El objetivo del proyecto es implementar una plataforma distribuida que permita procesar consultas relacionadas con la **Liga de Primera de Chile**, utilizando un sistema de caché para reducir accesos innecesarios a la fuente externa y mejorar los tiempos de respuesta.
 
-## Arquitectura inicial
+## Arquitectura del sistema
 
-El sistema se divide en los siguientes servicios:
+El sistema se divide en cuatro servicios principales:
 
 ### 1. Traffic Generator
-Genera solicitudes sintéticas al sistema utilizando distribuciones de tráfico
-Uniforme y Zipf.
+
+Genera solicitudes sintéticas hacia el sistema.
+
+Actualmente permite:
+
+- Generar consultas Q1 a Q5.
+- Utilizar distribución Uniforme.
+- Utilizar distribución Zipf.
+- Configurar la cantidad de solicitudes.
+- Configurar la tasa de arribo.
+- Configurar la semilla aleatoria.
+- Configurar el parámetro de Zipf.
+- Seleccionar los tipos de consulta habilitados.
+- Enviar consultas mediante HTTP al servicio de caché.
 
 ### 2. Cache Service
-Recibe las consultas del generador y utiliza Redis para determinar si la respuesta
-se encuentra almacenada.
 
-- Cache hit: retorna directamente la respuesta almacenada.
-- Cache miss: solicita la información al Scraper.
+Recibe las consultas provenientes del generador de tráfico y utiliza Redis para determinar si la respuesta se encuentra almacenada.
+
+Flujo esperado:
+
+- **Cache hit:** retorna directamente la respuesta almacenada.
+- **Cache miss:** envía la consulta al Scraper Service, almacena la respuesta obtenida y posteriormente la retorna al generador.
+
+Este servicio debe permitir experimentar con distintos tamaños de caché, TTL y políticas de reemplazo.
+
+> Estado actual: pendiente de implementación.
 
 ### 3. Scraper Service
-Obtiene información desde Soccerway cuando la respuesta no se encuentra en caché.
 
-### 4. Metrics Service
-Registra métricas del comportamiento del sistema, como:
+Obtiene información actualizada de la **Liga de Primera de Chile** desde Soccerway.
 
-- Cache hits
-- Cache misses
-- Latencia
-- Throughput
-- Tiempo de scraping
-- Errores
-- Evictions
+Debido a que parte de la información de Soccerway es cargada dinámicamente mediante JavaScript, el servicio utiliza **Playwright y Chromium** para renderizar las páginas antes de procesarlas.
 
-## Flujo general
+Los datos obtenidos son procesados y precargados en memoria al iniciar el servicio.
 
-Traffic Generator -> Cache Service -> Scraper Service
+Actualmente soporta:
 
-En paralelo, los distintos componentes registran información en el servicio
-de métricas.
+- **Q1:** próximos partidos de un equipo.
+- **Q2:** últimos partidos de un equipo.
+- **Q3:** historial de enfrentamientos entre dos equipos.
+- **Q4:** partidos dentro de un período de fechas.
+- **Q5:** tabla completa de posiciones.
 
-## Tecnologías
+La tabla de posiciones incluye:
 
-- Docker
-- Docker Compose
-- Redis
-- Git / GitLab
+- Posición.
+- Equipo.
+- Partidos jugados.
+- Partidos ganados.
+- Partidos empatados.
+- Partidos perdidos.
+- Goles a favor.
+- Goles en contra.
+- Diferencia de gol.
+- Puntos.
 
-## Estado del proyecto
+El servicio expone una API HTTP mediante FastAPI.
 
-- [x] Inicialización del repositorio Git
-- [x] Creación de la estructura base
-- [ ] Configuración inicial de Docker Compose
-- [ ] Implementación del generador de tráfico
-- [ ] Implementación del servicio de caché
-- [ ] Implementación del scraper
-- [ ] Implementación del sistema de métricas
-- [ ] Experimentos y análisis
+#### Endpoint de estado
+
+```http
+GET /health
