@@ -10,7 +10,9 @@ solo se crea la API base para comprobar que el servicio puede
 ejecutarse correctamente dentro de Docker.
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+
+from source_client import obtener_pagina_soccerway
 
 
 app = FastAPI(
@@ -20,16 +22,28 @@ app = FastAPI(
 )
 
 
-@app.get("/health")
-def health_check():
+@app.get("/source-health")
+def source_health():
     """
-    Permite comprobar que el servicio está disponible.
-
-    Este endpoint será útil posteriormente para verificar desde
-    Docker y desde otros servicios que el scraper está operativo.
+    Comprueba que el scraper pueda acceder correctamente
+    a la fuente externa Soccerway.
     """
 
-    return {
-        "estado": "ok",
-        "servicio": "scraper-service"
-    }
+    try:
+        resultado = obtener_pagina_soccerway()
+
+        return {
+            "estado": "ok",
+            "fuente": "Soccerway",
+            "codigo_http": resultado["codigo_http"],
+            "tiempo_scraping_ms": resultado["tiempo_scraping_ms"],
+            "tamano_html_bytes": len(
+                resultado["html"].encode("utf-8")
+            )
+        }
+
+    except RuntimeError as error:
+        raise HTTPException(
+            status_code=503,
+            detail=str(error)
+        )
