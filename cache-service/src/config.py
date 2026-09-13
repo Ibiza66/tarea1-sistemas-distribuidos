@@ -8,7 +8,7 @@ import os
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")
 REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 
-CACHE_TTL = int(os.getenv("CACHE_TTL", "60"))
+CACHE_TTL = int(os.getenv("CACHE_TTL", "20"))
 
 SCRAPER_SERVICE_URL = os.getenv(
     "SCRAPER_SERVICE_URL",

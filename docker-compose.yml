@@ -3,6 +3,10 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis-cache
+    command: >
+        redis-server
+        --maxmemory ${CACHE_MAXMEMORY:-2mb}
+        --maxmemory-policy ${CACHE_EVICTION_POLICY:-allkeys-lru}
     ports:
       - "6379:6379"
 
