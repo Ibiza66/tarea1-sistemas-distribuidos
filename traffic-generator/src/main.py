@@ -109,6 +109,12 @@ def ejecutar_generador(configuracion):
                 f"Solicitud {numero}: {consulta}"
             )
 
+        enviar_consulta_cache(
+            configuracion["cache_url"],
+            consulta,
+            configuracion["cache_timeout"]
+        )
+
         # Se espera antes de generar la siguiente solicitud para
         # respetar aproximadamente la tasa de arribo configurada.
         # Después de la última solicitud no es necesario esperar.

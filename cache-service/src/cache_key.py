@@ -1,3 +1,7 @@
+"""
+Módulo encargado de construir las claves del cache a partir de las consultas recibidas.
+"""
+
 import hashlib
 import json
 

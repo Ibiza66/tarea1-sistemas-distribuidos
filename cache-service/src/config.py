@@ -1,3 +1,8 @@
+"""
+Módulo de configuración del servicio de cache. Contiene las variables de entorno y sus valores
+por defecto.
+"""
+
 import os
 
 REDIS_HOST = os.getenv("REDIS_HOST", "redis")

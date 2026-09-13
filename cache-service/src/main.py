@@ -21,11 +21,18 @@ app = FastAPI()
 
 
 class ConsultaRequest(BaseModel):
+    """
+    Formato de las solicitudes recibidas desde traffic-generator."""
     tipo_consulta: str
     parametros: dict[str, Any] = Field(default_factory=dict)
 
 @app.post("/consulta")
 def recibir_consulta(consulta: ConsultaRequest):
+    """
+    Recibe una consulta y la procesa, intentando obtenerla del cache.
+    Si se tiene guardada la consulta con su respectiva clave, devuelve la respuesta directamente. Si no, la envía al scraper-service
+    para obtener la respuesta, guardarla en el cache y luego devolverla.
+    """
 
     datos = consulta.model_dump()
     key = construir_cache_key(datos)
@@ -40,6 +47,8 @@ def recibir_consulta(consulta: ConsultaRequest):
 
 @app.get("/test-cache")
 def test_cache():
+    """
+    Prueba de funcionamiento del cache. Guarda un valor en el cache y luego lo obtiene."""
 
     key = "prueba"
 

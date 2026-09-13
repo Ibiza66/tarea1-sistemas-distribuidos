@@ -1,3 +1,6 @@
+"""
+Se encarga de la comunicación con Redis, para obtener, guardar y eliminar valores del cache."""
+
 import redis
 
 from config import REDIS_HOST, REDIS_PORT
