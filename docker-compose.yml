@@ -28,9 +28,13 @@ services:
     container_name: cache-service
     ports:
       - "8000:8000"
+    environment:
+      METRICS_SERVICE_URL: http://metrics-service:8002
+      METRICS_TIMEOUT: 2
     depends_on:
       - redis
       - scraper-service
+      - metrics-service
 
   scraper-service:
     build: ./scraper-service

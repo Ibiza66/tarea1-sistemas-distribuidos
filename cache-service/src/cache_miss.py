@@ -6,6 +6,7 @@ este módulo se encarga de consultar al scraper-service para obtener la respuest
 
 import requests
 import json
+import time
 
 from config import CACHE_TTL, SCRAPER_SERVICE_URL, CACHE_TIMEOUT
 from redis_client import guardar_cache
@@ -32,19 +33,25 @@ def consultar_scraper(consulta):
 
 def procesar_miss(consulta, key):
     """
-    Procesa un cache miss. Consulta al scraper-service para obtener la respuesta, la guarda en el cache y la devuelve al cliente."""
+    Procesa un cache miss. Consulta al scraper-service,
+    guarda la respuesta en cache y la devuelve.
+    """
+
     print(">>> CACHE MISS")
 
-    # Consultar scraper
+    inicio_scraper = time.perf_counter()
+
     respuesta = consultar_scraper(consulta)
 
-    # Convertir respuesta a JSON
+    tiempo_scraper_ms = (
+        time.perf_counter() - inicio_scraper
+    ) * 1000
+
     valor = json.dumps(
         respuesta,
         ensure_ascii=False
     )
 
-    # Guardar en Redis
     guardar_cache(
         key,
         valor,
@@ -53,4 +60,4 @@ def procesar_miss(consulta, key):
 
     print(">>> Respuesta guardada en Redis")
 
-    return respuesta
+    return respuesta, tiempo_scraper_ms

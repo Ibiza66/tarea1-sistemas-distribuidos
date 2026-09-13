@@ -10,11 +10,13 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from typing import Any
 import json
+import time
 
 from redis_client import obtener_cache, guardar_cache
 from cache_key import construir_cache_key
 from config import CACHE_TTL, SCRAPER_SERVICE_URL, CACHE_TIMEOUT
 from cache_miss import procesar_miss
+from metrics_client import registrar_evento
 
 
 app = FastAPI()
@@ -28,11 +30,8 @@ class ConsultaRequest(BaseModel):
 
 @app.post("/consulta")
 def recibir_consulta(consulta: ConsultaRequest):
-    """
-    Recibe una consulta y la procesa, intentando obtenerla del cache.
-    Si se tiene guardada la consulta con su respectiva clave, devuelve la respuesta directamente. Si no, la envía al scraper-service
-    para obtener la respuesta, guardarla en el cache y luego devolverla.
-    """
+
+    inicio = time.perf_counter()
 
     datos = consulta.model_dump()
     key = construir_cache_key(datos)
@@ -41,9 +40,36 @@ def recibir_consulta(consulta: ConsultaRequest):
 
     if respuesta is not None:
         print(">>> CACHE HIT")
+
+        latencia_ms = (
+            time.perf_counter() - inicio
+        ) * 1000
+
+        registrar_evento(
+            tipo_evento="hit",
+            tipo_consulta=consulta.tipo_consulta,
+            latencia_ms=latencia_ms
+        )
+
         return json.loads(respuesta)
 
-    return procesar_miss(datos, key)
+    respuesta, tiempo_scraper_ms = procesar_miss(
+        datos,
+        key
+    )
+
+    latencia_ms = (
+        time.perf_counter() - inicio
+    ) * 1000
+
+    registrar_evento(
+        tipo_evento="miss",
+        tipo_consulta=consulta.tipo_consulta,
+        latencia_ms=latencia_ms,
+        scraping_ms=tiempo_scraper_ms
+    )
+
+    return respuesta
 
 @app.get("/test-cache")
 def test_cache():

@@ -16,3 +16,11 @@ SCRAPER_SERVICE_URL = os.getenv(
 )
 
 CACHE_TIMEOUT = float(os.getenv("CACHE_TIMEOUT", "5"))
+METRICS_SERVICE_URL = os.getenv(
+    "METRICS_SERVICE_URL",
+    "http://metrics-service:8002"
+)
+
+METRICS_TIMEOUT = float(
+    os.getenv("METRICS_TIMEOUT", "2")
+)
