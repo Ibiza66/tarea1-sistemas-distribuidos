@@ -22,6 +22,8 @@ services:
   cache-service:
     build: ./cache-service
     container_name: cache-service
+    ports:
+      - "8000:8000"
     depends_on:
       - redis
       - scraper-service

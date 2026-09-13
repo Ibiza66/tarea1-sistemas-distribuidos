@@ -15,6 +15,7 @@ from collections import Counter
 from config import obtener_configuracion
 from query_generator import generar_consulta
 from traffic_distribution import seleccionar_uniforme, seleccionar_zipf
+from cache_client import enviar_consulta_cache
 
 
 def ejecutar_generador(configuracion):
