@@ -2,75 +2,103 @@
 
 ## All You Can Cache: Plataforma distribuida del fútbol chileno
 
-Proyecto correspondiente a la Tarea 1 del curso **Sistemas Distribuidos**.
+Proyecto correspondiente a la **Tarea 1 del curso Sistemas Distribuidos**.
 
-El objetivo del proyecto es implementar una plataforma distribuida que permita procesar consultas relacionadas con la **Liga de Primera de Chile**, utilizando un sistema de caché para reducir accesos innecesarios a la fuente externa y mejorar los tiempos de respuesta.
+El objetivo es implementar una plataforma distribuida para procesar consultas relacionadas con la **Liga de Primera de Chile**, utilizando Redis como sistema de caché para disminuir consultas repetidas, reducir la latencia y analizar el comportamiento del sistema bajo diferentes patrones de tráfico y configuraciones de caché.
+
+---
 
 ## Arquitectura del sistema
 
-El sistema se divide en cuatro servicios principales:
+La solución está compuesta por cuatro servicios principales y una instancia de Redis:
 
 ### 1. Traffic Generator
 
 Genera solicitudes sintéticas hacia el sistema.
 
-Actualmente permite:
+Características principales:
 
-- Generar consultas Q1 a Q5.
-- Utilizar distribución Uniforme.
-- Utilizar distribución Zipf.
-- Configurar la cantidad de solicitudes.
-- Configurar la tasa de arribo.
-- Configurar la semilla aleatoria.
-- Configurar el parámetro de Zipf.
-- Seleccionar los tipos de consulta habilitados.
-- Enviar consultas mediante HTTP al servicio de caché.
+- Consultas Q1 a Q5.
+- Distribución Uniforme.
+- Distribución Zipf.
+- Semilla aleatoria configurable.
+- Cantidad de solicitudes configurable.
+- Tasa de arribo configurable.
+- Parámetro `s` de Zipf configurable.
+
+---
 
 ### 2. Cache Service
 
-Recibe las consultas provenientes del generador de tráfico y utiliza Redis para determinar si la respuesta se encuentra almacenada.
+Recibe las solicitudes generadas y determina si la respuesta se encuentra almacenada en Redis.
 
-Flujo esperado:
+#### Cache Hit
 
-- **Cache hit:** retorna directamente la respuesta almacenada.
-- **Cache miss:** envía la consulta al Scraper Service, almacena la respuesta obtenida y posteriormente la retorna al generador.
+Si la clave ya existe en Redis, la respuesta almacenada se retorna directamente.
 
-Este servicio debe permitir experimentar con distintos tamaños de caché, TTL y políticas de reemplazo.
+#### Cache Miss
 
-> Estado actual: pendiente de implementación.
+Si la clave no existe:
+
+1. Se solicita la información al `Scraper Service`.
+2. La respuesta se almacena en Redis.
+3. Se aplica un TTL configurable.
+4. Se retorna la respuesta al generador.
+5. Se registran las métricas correspondientes.
+
+La caché permite modificar:
+
+- TTL.
+- Tamaño máximo de memoria.
+- Política de reemplazo.
+
+---
 
 ### 3. Scraper Service
 
-Obtiene información actualizada de la **Liga de Primera de Chile** desde Soccerway.
+Obtiene y procesa información de la Liga de Primera de Chile desde Soccerway.
 
-Debido a que parte de la información de Soccerway es cargada dinámicamente mediante JavaScript, el servicio utiliza **Playwright y Chromium** para renderizar las páginas antes de procesarlas.
+Debido a que parte del contenido del sitio se carga dinámicamente mediante JavaScript, el servicio utiliza:
 
-Los datos obtenidos son procesados y precargados en memoria al iniciar el servicio.
+- Playwright.
+- Chromium.
+- BeautifulSoup.
 
-Actualmente soporta:
+La información se obtiene y procesa al iniciar el servicio y posteriormente queda precargada en memoria para responder las consultas.
+
+Consultas implementadas:
 
 - **Q1:** próximos partidos de un equipo.
 - **Q2:** últimos partidos de un equipo.
-- **Q3:** historial de enfrentamientos entre dos equipos.
+- **Q3:** enfrentamientos entre dos equipos.
 - **Q4:** partidos dentro de un período de fechas.
 - **Q5:** tabla completa de posiciones.
 
-La tabla de posiciones incluye:
+---
 
-- Posición.
-- Equipo.
-- Partidos jugados.
-- Partidos ganados.
-- Partidos empatados.
-- Partidos perdidos.
-- Goles a favor.
-- Goles en contra.
-- Diferencia de gol.
-- Puntos.
+### 4. Metrics Service
 
-El servicio expone una API HTTP mediante FastAPI.
+Servicio independiente encargado de registrar y calcular métricas del comportamiento del sistema.
 
-#### Endpoint de estado
+Métricas implementadas:
 
-```http
-GET /health
+- Cache hits.
+- Cache misses.
+- Hit rate.
+- Miss rate.
+- Latencia promedio.
+- Latencia p50.
+- Latencia p95.
+- Throughput.
+- Tiempo de acceso al Scraper Service.
+- Errores.
+- Evictions.
+- Evictions por minuto.
+
+Endpoints principales:
+
+```text
+GET  /health
+POST /evento
+GET  /metrics
+POST /reset
