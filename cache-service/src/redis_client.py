@@ -23,3 +23,7 @@ def guardar_cache(key, valor, ttl):
 
 def eliminar_cache(key):
     cliente_redis.delete(key)
+
+def obtener_evictions():
+    estadisticas = cliente_redis.info("stats")
+    return int(estadisticas.get("evicted_keys", 0))

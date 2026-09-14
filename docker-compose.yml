@@ -31,6 +31,7 @@ services:
     environment:
       METRICS_SERVICE_URL: http://metrics-service:8002
       METRICS_TIMEOUT: 2
+      CACHE_TTL: ${CACHE_TTL:-300}
     depends_on:
       - redis
       - scraper-service
