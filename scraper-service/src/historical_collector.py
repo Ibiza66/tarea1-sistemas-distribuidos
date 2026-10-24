@@ -9,6 +9,7 @@ sobre los registros recolectados.
 import time
 
 from match_parser import extraer_partidos
+from mongo_storage import guardar_partidos
 from render_client import obtener_html_resultados
 
 
@@ -99,7 +100,28 @@ def recolectar_partidos_historicos():
     print(
         f"Partidos no finalizados: {len(no_finalizados)}"
     )
+    print()
+    print("Guardando partidos en MongoDB...")
 
+    resultado_mongo = guardar_partidos(
+        partidos_unicos
+    )
+
+    print()
+    print("Resumen de almacenamiento")
+    print("-------------------------")
+    print(
+        f"Recibidos: {resultado_mongo['recibidos']}"
+    )
+    print(
+        f"Insertados: {resultado_mongo['insertados']}"
+    )
+    print(
+        f"Duplicados: {resultado_mongo['duplicados']}"
+    )
+    print(
+        f"Inválidos: {resultado_mongo['invalidos']}"
+    )
     return partidos_unicos
 
 
