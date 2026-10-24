@@ -1,0 +1,7 @@
+{
+    "experimento": "escritura_mongodb",
+    "repeticiones": 3,
+    "documentos": 1157,
+    "tiempo_promedio_total_ms": 8.317691,
+    "tiempo_promedio_por_documento_ms": 0.007189016
+}

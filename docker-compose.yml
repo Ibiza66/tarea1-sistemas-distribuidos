@@ -53,6 +53,9 @@ services:
     environment:
       MONGO_URI: mongodb://mongodb:27017
       MONGO_DB: futbol_chileno
+      EXPERIMENTS_DIR: /results/tarea2
+    volumes:
+      - ./experiments/tarea2:/results/tarea2
     depends_on:
       - mongodb
 
