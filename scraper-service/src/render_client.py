@@ -29,14 +29,22 @@ def construir_url_resultados(temporada=2026):
     """
     Construye la URL de resultados de Soccerway
     para una temporada determinada.
+
+    Ejemplos:
+        2025 -> liga-de-primera-2025
+        2016/2017 -> liga-de-primera-2016-2017
     """
 
-    if int(temporada) == 2026:
+    temporada_texto = str(temporada)
+
+    if temporada_texto == "2026":
         return RESULTADOS_URL
+
+    temporada_slug = temporada_texto.replace("/", "-")
 
     return (
         "https://cl.soccerway.com/chile/"
-        f"liga-de-primera-{temporada}/resultados/"
+        f"liga-de-primera-{temporada_slug}/resultados/"
     )
 
 
