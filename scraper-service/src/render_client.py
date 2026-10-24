@@ -24,36 +24,47 @@ TABLA_URL = (
     "tabla-de-posiciones/"
 )
 
-def obtener_html_resultados(timeout_ms=30000):
+
+def construir_url_resultados(temporada=2026):
     """
-    Renderiza la página de resultados y devuelve su HTML completo.
+    Construye la URL de resultados de Soccerway
+    para una temporada determinada.
+    """
 
-    Returns
-    -------
-    dict
-        HTML renderizado y tiempo utilizado para obtenerlo.
+    if int(temporada) == 2026:
+        return RESULTADOS_URL
 
-    Raises
-    ------
-    RuntimeError
-        Si no es posible cargar correctamente la página.
+    return (
+        "https://cl.soccerway.com/chile/"
+        f"liga-de-primera-{temporada}/resultados/"
+    )
+
+
+def obtener_html_resultados(
+    temporada=2026,
+    timeout_ms=30000
+):
+    """
+    Renderiza la página de resultados de una temporada
+    y devuelve su HTML completo.
     """
 
     tiempo_inicio = time.perf_counter()
 
     try:
         with sync_playwright() as playwright:
-            navegador = playwright.chromium.launch(headless=True)
+            navegador = playwright.chromium.launch(
+                headless=True
+            )
+
             pagina = navegador.new_page()
 
             pagina.goto(
-                RESULTADOS_URL,
+                construir_url_resultados(temporada),
                 wait_until="domcontentloaded",
                 timeout=timeout_ms
             )
 
-            # Esperamos hasta que Soccerway haya generado al menos
-            # un partido en el DOM.
             pagina.wait_for_selector(
                 "div.event__match",
                 timeout=timeout_ms
@@ -79,7 +90,8 @@ def obtener_html_resultados(timeout_ms=30000):
         raise RuntimeError(
             f"Error al renderizar Soccerway: {error}"
         ) from error
-    
+
+
 def obtener_html_liga(timeout_ms=30000):
     """
     Renderiza la página principal de la Liga de Primera.
@@ -129,6 +141,7 @@ def obtener_html_liga(timeout_ms=30000):
         raise RuntimeError(
             f"Error al renderizar Soccerway: {error}"
         ) from error
+
 
 def obtener_html_tabla(timeout_ms=30000):
     """
