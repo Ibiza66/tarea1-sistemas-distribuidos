@@ -21,21 +21,6 @@ def es_partido_valido(partido):
     return goles_local >= 0 and goles_visita >= 0
 
 
-def normalizar_partido(partido):
-    """
-    Normaliza los campos necesarios para el análisis.
-    """
-    return {
-        "id_partido": partido["id_partido"],
-        "temporada": str(partido["temporada"]).strip(),
-        "competicion": partido["competicion"].strip(),
-        "local": partido["local"].strip(),
-        "visita": partido["visita"].strip(),
-        "goles_local": int(partido["goles_local"]),
-        "goles_visita": int(partido["goles_visita"])
-    }
-
-
 def generar_contribuciones(partido):
 
     local = partido["equipo_local"]
