@@ -27,4 +27,4 @@ COPY src/ .
 EXPOSE 8008
 
 # Comando ejecutado cuando inicia el contenedor.
-CMD ["python", "test.py"]
+CMD ["python", "main.py"]
