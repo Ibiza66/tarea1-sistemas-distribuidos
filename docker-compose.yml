@@ -10,6 +10,14 @@ services:
     ports:
       - "6379:6379"
 
+#  mongodb:
+#    image: mongo:7.0
+#    container_name: mongodb
+#    ports:
+#     - "27017:27017"
+#    volumes:
+#      - mongodb-data:/data/db
+
   mongodb:
     image: mongo:7.0
     container_name: mongodb
@@ -17,6 +25,12 @@ services:
       - "27017:27017"
     volumes:
       - mongodb-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   traffic-generator:
     build: ./traffic-generator
@@ -65,5 +79,20 @@ services:
     ports:
       - "8002:8002"
 
+  spark-metrics:
+    build: ./spark-metrics
+    container_name: spark-metrics
+    environment:
+      MONGO_URI: mongodb://mongodb:27017
+      MONGO_DB: futbol_chileno
+      COLECCION_PARTIDOS: raw_matches
+      MONGO_OUTPUT_COLLECTION: estadisticas
+      SPARK_MASTER: local[*]
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    profiles:
+      - analytics
+      
 volumes:
   mongodb-data:
