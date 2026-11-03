@@ -8,6 +8,7 @@ from config import (
 )
 
 from mongo_reader import cargar_partidos
+from mongo_writer import guardar_resultados
 
 from preprocessing import (
     partido_valido,
@@ -93,170 +94,174 @@ def ejecutar_procesamiento(sc):
             f"{contribuciones_rdd.count()}"
         )
 
+        resultados = {}
+
         # ==================================================
-        # CONSULTA 1
+        # CONSULTA 1: ESTADÍSTICAS POR EQUIPO
         # ==================================================
 
-        print("\n========== CONSULTA 1 ==========")
-        print("ESTADÍSTICAS POR EQUIPO")
-
-        resultado = consulta_estadisticas_equipo(
+        consulta_1 = consulta_estadisticas_equipo(
             estadisticas_rdd
-        )
+        ).collect()
 
-        for equipo, metricas in resultado.collect():
-            print(equipo, metricas)
+        resultados["consulta_1_estadisticas_equipo"] = [
+            {
+                "equipo": clave[0],
+                "temporada": clave[1],
+                "competicion": clave[2],
+                "metricas": metricas
+            }
+            for clave, metricas in consulta_1
+        ]
 
         # ==================================================
-        # CONSULTA 2
+        # CONSULTA 2: GOLES POR EQUIPO
         # ==================================================
 
-        print("\n========== CONSULTA 2 ==========")
-        print("GOLES POR EQUIPO")
-
-        resultado = consulta_goles_equipo(
+        consulta_2 = consulta_goles_equipo(
             estadisticas_rdd
-        )
+        ).collect()
 
-        for equipo, metricas in resultado.collect():
-            print(equipo, metricas)
+        resultados["consulta_2_goles_equipo"] = [
+            {
+                "equipo": clave[0],
+                "temporada": clave[1],
+                "competicion": clave[2],
+                "metricas": metricas
+            }
+            for clave, metricas in consulta_2
+        ]
 
         # ==================================================
-        # CONSULTA 3
+        # CONSULTA 3: PUNTOS Y RENDIMIENTO
         # ==================================================
 
-        print("\n========== CONSULTA 3 ==========")
-        print("PUNTOS Y RENDIMIENTO")
-
-        resultado = consulta_puntos_rendimiento(
+        consulta_3 = consulta_puntos_rendimiento(
             estadisticas_rdd
-        )
+        ).collect()
 
-        for equipo, metricas in resultado.collect():
-            print(equipo, metricas)
+        resultados["consulta_3_puntos_rendimiento"] = [
+            {
+                "equipo": clave[0],
+                "temporada": clave[1],
+                "competicion": clave[2],
+                "metricas": metricas
+            }
+            for clave, metricas in consulta_3
+        ]
 
         # ==================================================
-        # CONSULTA 4
+        # CONSULTA 4: DISTRIBUCIÓN DE RESULTADOS
         # ==================================================
 
-        print("\n========== CONSULTA 4 ==========")
-        print("DISTRIBUCIÓN DE RESULTADOS")
-
-        resultado = dict(
+        consulta_4 = dict(
             consulta_distribucion_resultados(
                 partidos_limpios
             ).collect()
         )
 
-        # Mostrar siempre las tres categorías
-
-        resultado_completo = {
-            "victorias_local": resultado.get(
-                "victorias_local", 0
-            ),
-            "victorias_visitante": resultado.get(
-                "victorias_visitante", 0
-            ),
-            "empates": resultado.get(
-                "empates", 0
-            )
-        }
-
-        for categoria, cantidad in resultado_completo.items():
-            print(f"{categoria}: {cantidad}")
+        resultados["consulta_4_distribucion_resultados"] = [
+            {
+                "resultado": categoria,
+                "cantidad": consulta_4.get(categoria, 0)
+            }
+            for categoria in [
+                "victorias_local",
+                "victorias_visitante",
+                "empates"
+            ]
+        ]
 
         # ==================================================
-        # CONSULTA 5
+        # CONSULTA 5: PROMEDIO DE GOLES
         # ==================================================
 
-        print("\n========== CONSULTA 5 ==========")
-        print("PROMEDIO DE GOLES")
-
-        resultado = consulta_promedio_goles(
+        consulta_5 = consulta_promedio_goles(
             partidos_limpios
         )
 
-        print(resultado)
+        resultados["consulta_5_promedio_goles"] = [
+            consulta_5
+        ]
 
         # ==================================================
-        # CONSULTA 6
+        # CONSULTA 6: PARTIDOS POR PERIODO
         # ==================================================
 
-        print("\n========== CONSULTA 6 ==========")
-        print("PARTIDOS POR PERIODO")
+        resultados_periodos = []
 
-        print("\nPartidos por mes:")
+        for tipo_periodo in ["mes", "anio", "temporada"]:
 
-        resultado = consulta_partidos_por_periodo(
-            partidos_limpios,
-            periodo="mes"
+            consulta_6 = consulta_partidos_por_periodo(
+                partidos_limpios,
+                periodo=tipo_periodo
+            ).collect()
+
+            for periodo, cantidad in consulta_6:
+
+                resultados_periodos.append({
+                    "tipo_periodo": tipo_periodo,
+                    "periodo": periodo,
+                    "cantidad_partidos": cantidad
+                })
+
+        resultados["consulta_6_partidos_por_periodo"] = (
+            resultados_periodos
         )
 
-        for periodo, cantidad in resultado.collect():
-            print(periodo, cantidad)
-
-        print("\nPartidos por año:")
-
-        resultado = consulta_partidos_por_periodo(
-            partidos_limpios,
-            periodo="anio"
-        )
-
-        for periodo, cantidad in resultado.collect():
-            print(periodo, cantidad)
-
-        print("\nPartidos por temporada:")
-
-        resultado = consulta_partidos_por_periodo(
-            partidos_limpios,
-            periodo="temporada"
-        )
-
-        for periodo, cantidad in resultado.collect():
-            print(periodo, cantidad)
-
         # ==================================================
-        # CONSULTA 7
+        # CONSULTA 7: RENDIMIENTO OFENSIVO
         # ==================================================
 
-        print("\n========== CONSULTA 7 ==========")
-        print("RENDIMIENTO OFENSIVO")
-
-        resultado = consulta_rendimiento_ofensivo(
+        consulta_7 = consulta_rendimiento_ofensivo(
             contribuciones_rdd,
             top_n=10
         )
 
-        for equipo, goles in resultado:
-            print(f"{equipo}: {goles} goles")
+        resultados["consulta_7_rendimiento_ofensivo"] = [
+            {
+                "equipo": equipo,
+                "goles_anotados": goles
+            }
+            for equipo, goles in consulta_7
+        ]
 
         # ==================================================
-        # CONSULTA 8
+        # CONSULTA 8: PARTIDOS CON MÁS GOLES
         # ==================================================
 
-        print("\n========== CONSULTA 8 ==========")
-        print("PARTIDOS CON MÁS GOLES")
-
-        resultado = consulta_partidos_mas_goles(
+        consulta_8 = consulta_partidos_mas_goles(
             partidos_limpios,
             top_n=10
         )
 
-        for partido in resultado:
+        resultados["consulta_8_partidos_mas_goles"] = []
 
-            total_goles = (
+        for partido in consulta_8:
+
+            documento = dict(partido)
+
+            documento["total_goles"] = (
                 partido["goles_local"]
                 + partido["goles_visitante"]
             )
 
-            print(
-                f"ID: {partido['match_id']} | "
-                f"{partido['equipo_local']} "
-                f"{partido['goles_local']} - "
-                f"{partido['goles_visitante']} "
-                f"{partido['equipo_visitante']} | "
-                f"Total goles: {total_goles}"
-            )
+            resultados[
+                "consulta_8_partidos_mas_goles"
+            ].append(documento)
+
+        # ==================================================
+        # MOSTRAR Y GUARDAR RESULTADOS
+        # ==================================================
+
+        print("\n========== RESUMEN DE CONSULTAS ==========")
+
+        for nombre, datos in resultados.items():
+            print(f"{nombre}: {len(datos)} registros")
+
+        print("\n========== GUARDANDO EN MONGODB ==========")
+
+        guardar_resultados(resultados)
 
     finally:
 
