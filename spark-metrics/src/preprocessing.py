@@ -38,12 +38,37 @@ def partido_valido(partido):
     ):
         return False
 
-    if str(partido["estado"]).strip().casefold() != "finalizado":
+    estados_validos = {
+        "finalizado",
+        "finalizado_tras_penales"
+    }
+
+    estado = str(
+        partido["estado"]
+    ).strip().casefold()
+
+    if estado not in estados_validos:
         return False
+
+    if estado == "finalizado_tras_penales":
+
+        penales_local = partido.get("penales_local")
+        penales_visitante = partido.get("penales_visitante")
+
+        if type(penales_local) is not int:
+            return False
+
+        if type(penales_visitante) is not int:
+            return False
+
+        if penales_local < 0 or penales_visitante < 0:
+            return False
+
+        if penales_local == penales_visitante:
+            return False
 
     if type(partido["goles_local"]) is not int:
         return False
-
     if type(partido["goles_visitante"]) is not int:
         return False
 
@@ -62,8 +87,13 @@ def partido_valido(partido):
     if not partido["equipo_visitante"].strip():
         return False
 
-    local = normalizar_nombre(partido["equipo_local"])
-    visitante = normalizar_nombre(partido["equipo_visitante"])
+    local = normalizar_nombre(
+        partido["equipo_local"]
+    )
+
+    visitante = normalizar_nombre(
+        partido["equipo_visitante"]
+    )
 
     if local == visitante:
         return False

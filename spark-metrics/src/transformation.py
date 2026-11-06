@@ -29,7 +29,20 @@ def generar_contribuciones(partido):
     goles_local = partido["goles_local"]
     goles_visitante = partido["goles_visitante"]
 
-    if goles_local > goles_visitante:
+    estado = str(partido["estado"]).strip().casefold()
+
+    if estado == "finalizado_tras_penales":
+        penales_local = partido.get("penales_local")
+        penales_visitante = partido.get("penales_visitante")
+
+        if penales_local > penales_visitante:
+            resultado_local = "Victoria"
+            resultado_visitante = "Derrota"
+        else:
+            resultado_local = "Derrota"
+            resultado_visitante = "Victoria"
+
+    elif goles_local > goles_visitante:
         resultado_local = "Victoria"
         resultado_visitante = "Derrota"
 
