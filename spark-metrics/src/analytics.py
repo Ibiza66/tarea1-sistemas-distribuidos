@@ -121,7 +121,19 @@ def consulta_distribucion_resultados(partidos_rdd):
         goles_local = partido["goles_local"]
         goles_visitante = partido["goles_visitante"]
 
-        if goles_local > goles_visitante:
+        estado = str(partido["estado"]).strip().casefold()
+
+        if estado == "finalizado_tras_penales":
+
+            penales_local = partido["penales_local"]
+            penales_visitante = partido["penales_visitante"]
+
+            if penales_local > penales_visitante:
+                resultado = "victorias_local"
+            else:
+                resultado = "victorias_visitante"
+
+        elif goles_local > goles_visitante:
             resultado = "victorias_local"
 
         elif goles_local < goles_visitante:
@@ -137,7 +149,6 @@ def consulta_distribucion_resultados(partidos_rdd):
         .map(clasificar_resultado)
         .reduceByKey(lambda a, b: a + b)
     )
-
 
 # ==========================================================
 # CONSULTA 5: PROMEDIO DE GOLES
